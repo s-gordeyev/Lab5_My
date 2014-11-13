@@ -4,44 +4,34 @@ using System.Linq;
 using System.Text;
 using System.Messaging;
 using System.Threading;
-using System.Numerics;
+using TaskLib;
 
 namespace Lab5MainNode
 {
     class Program
     {
-        public const string connString = ".\\Private$\\RouterQueue";
-        public const string connStringAns = ".\\Private$\\RouterQueueAnswer";
-
         static void Main(string[] args)
         {
             createQueues();
 
-            int id = TaskManager.NewTaskPrime(4, 2);
-            short ans = -1;
-            while ((ans = TaskManager.GetAnswerByIdPrime(id)) == -1) 
+            int id = TaskManager.NewTask(Tasks.TESTPRIME,2500000, 2);
+            while (TaskManager.GetAnswerById(id) == null) 
                 Thread.Sleep(10);
+
+            string ans = TaskManager.GetAnswerById(id).ToString();
+            
 
             Console.WriteLine(ans);
 
-            TaskManager.dispose();
-        }
-
-        public static void send(Object obj, string connString){
-            using (MessageQueue msQ = new MessageQueue(connString))
-            {
-                Message m = new Message(obj);
-                msQ.Send(m);
-            }
+            //TaskManager.Dispose();
         }
 
         public static void createQueues()
         {
-            if (!MessageQueue.Exists(connString))
-                MessageQueue.Create(connString);
-
-            if (!MessageQueue.Exists(connStringAns))
-                MessageQueue.Create(connStringAns);
+            if (!MessageQueue.Exists(MQueue.ConnectionTask))
+                MessageQueue.Create(MQueue.ConnectionTask);
+            if (!MessageQueue.Exists(MQueue.ConnectionAnswer))
+                MessageQueue.Create(MQueue.ConnectionAnswer);
         }
     }
 }

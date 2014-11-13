@@ -4,94 +4,80 @@ using System.Linq;
 using System.Text;
 using System.Messaging;
 using System.Threading;
+using TaskLib;
 
 namespace Lab5MainNode
 {
     public class TaskManager
     {
-        static List<Task> tasks = new List<Task>();
+        static List<Task> tasksInProcess = new List<Task>();
+        static List<Task> tasksFinished = new List<Task>();
         static int counter = 0;
-        static List<Thread> trds = new List<Thread>();
+        static Thread trd;
 
         static TaskManager()
         {
-            AddChecking(TaskManager.CheckAnswerPrime);
+            AddChecking(TaskManager.CheckAnswer);
         }
 
         static void AddChecking(Action a){
-            Thread t = new Thread(new ThreadStart(a));
-            t.Start();
-            trds.Add(t);
+            trd = new Thread(new ThreadStart(a));
+            trd.Start();
         }
 
-        static public void dispose()
+        static public void Dispose()
         {
-            trds.ForEach(delegate(Thread t) {
-                try
-                {
-                    t.Abort();
-                }
-                catch {}
-            });
+            trd.Abort();
         }
 
-        static void add(Task t) 
+        static void Add(Task t) 
         {
-            tasks.Add(t);
-            Program.send(t, Program.connString);
-        }
-
-        public static int NewTaskPrime(int number, int numberOfParall) 
-        {
-            if (numberOfParall < 1)
-                numberOfParall = 1;
-
-            TaskManager.counter++;
-
-            int nsq = (int)Math.Sqrt(number) + 1;
-            int prev = 2;
-
-            int maxNumberOfParall = Math.Max(nsq / 4, 1);
-
-            if (maxNumberOfParall < numberOfParall)
-                numberOfParall = maxNumberOfParall;
+            tasksInProcess.Add(t);
+            foreach (SubTask st in t.subtasks)
+                MQueue.SendSubTask(st, MQueue.ConnectionTask);
             
-            for (int i = 0; i < numberOfParall; i++)
-            {
-                int cur = nsq * (i + 1) / numberOfParall;
-                TaskPrime tp = new TaskPrime { lowerBound = prev, upperBound = cur,
-                                              number = number, numberOfParall = numberOfParall, id = TaskManager.counter};
-                TaskManager.add(tp);
-                prev = cur + 1;
-            }
+            if (trd.ThreadState == ThreadState.Suspended)
+                trd.Resume();
+        }
+
+        public static int NewTask(Tasks t, int number, int numberOfParall) 
+        {
+            TaskManager.counter++;
+            Task tsk = Task.CreateTask(t, number, numberOfParall, TaskManager.counter);
+            TaskManager.Add(tsk);
 
             return TaskManager.counter;
         }
 
-        static void CheckAnswerPrime() 
+        public static void makeFinished(Task t)
         {
-            using (MessageQueue mq = new MessageQueue(Program.connStringAns)) 
-            {
-                while (true)
-                {
-                    if (tasks.Count == 0)
-                    {
-                        Thread.Sleep(10);
-                        continue;
-                    }
+            TaskManager.tasksFinished.Add(t);
+            TaskManager.tasksInProcess.Remove(t);
+        }
 
-                    mq.Formatter = new XmlMessageFormatter(new Type[] { typeof(TaskPrime) });
-                    TaskPrime tp = (TaskPrime)mq.Receive().Body;
-                    TaskPrime hk = (TaskPrime)tasks.FirstOrDefault<Task>(task => (task.id == tp.id && task.lowerBound == tp.lowerBound));
-                    hk.answer = tp.answer;
-                }
+        static void CheckAnswer() 
+        {
+            while (true)
+            {
+                if (tasksInProcess.Count == 0)
+                    trd.Suspend();
+
+                 SubTask st = MQueue.ReceiveSubTask(MQueue.ConnectionAnswer);
+                 Task hk = (Task)tasksInProcess.FirstOrDefault<Task>(task => (task.id == st.id));
+                 hk.SetResultOfSubTask(st);
+
+                 if (hk.IsAllSubTasksExecuted())
+                 {
+                     hk.group();
+                     TaskManager.makeFinished(hk);
+                 }
             }
         }
 
-        public static short GetAnswerByIdPrime(int id) 
+        public static object GetAnswerById(int id) 
         {
-            return TaskPrime.group(tasks.Where<Task>(x => x.id == id).Select(t => (TaskPrime)t).ToArray<TaskPrime>());
+            Task t = tasksFinished.FirstOrDefault<Task>(x => x.id == id);
+            return (t == null) ? null : t.result;
         }
-
     }
 }

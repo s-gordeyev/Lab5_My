@@ -7,4 +7,11 @@ F:\Lab5MainNode\Lab5MainNode\obj\x86\Debug\Lab5MainNode.pdb
 F:\Lab5MainNode\Lab5MainNode\bin\Debug\Lab5MainNode.exe
 F:\Lab5MainNode\Lab5MainNode\bin\Debug\Lab5MainNode.pdb
 F:\Lab5MainNode\Lab5MainNode\obj\x86\Debug\ResolveAssemblyReference.cache
-c:\home\Lab5MainNode\Lab5MainNode\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\Home\Lab5MainNode\Lab5MainNode\obj\x86\Debug\Lab5MainNode.csprojResolveAssemblyReference.cache
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\obj\x86\Debug\Lab5MainNode.exe
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\obj\x86\Debug\Lab5MainNode.pdb
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\bin\Debug\Lab5MainNode.exe
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\bin\Debug\Lab5MainNode.pdb
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\bin\Debug\TaskLib.dll
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\bin\Debug\TaskLib.pdb
+C:\Home\Lab5\Lab5MainNode\Lab5MainNode\obj\x86\Debug\Lab5MainNode.csprojResolveAssemblyReference.cache
